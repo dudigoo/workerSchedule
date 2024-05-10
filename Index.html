@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html dir="rtl">
+    <head>
+<style>
+h3 {
+  text-align: center;
+}
+h5 {
+  text-align: center;
+}
+
+.more_info {
+  border-bottom: 1px dotted;
+  position: relative;
+}
+
+thead input {
+        width: 100%;
+}
+
+</style>
+  <base target="_top">
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/plug-ins/1.11.3/sorting/datetime-moment.js"></script>
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/fixedheader/3.2.2/js/dataTables.fixedHeader.min.js"></script>
+
+
+  <!--##JAVASCRIPT FUNCTIONS ~ start ---------------------------------------------------- -->
+  <script>
+      function onInitFailure(error) {
+        showTable("ERROR: " + error.message);
+      }
+
+      function onInitSuccess(dat) {
+      console.log('tat2');
+        if (dat.name=='Unknown'){
+          showTable('Unknown mail: ' + dat.email);
+        } else {
+          dat.mode= document.getElementById("mode").innerHTML;
+          let hed=' מערכת: '+ dat.name +'&nbsp&nbsp'+ ' mail:' + dat.email ;
+          if (dat.mode != 'one'){
+            hed=' מערכת שעות';
+          }
+          if (document.getElementById("hist").innerHTML == 'y'){
+            hed=' היסטוריית '+hed;
+          }
+          hed="<h5>"+hed+"</h5><br>";
+          //console.log('mode='+document.getElementById("hist").innerHTML);
+          createTable(dat,hed);
+        }
+      }
+
+function initDT2() {
+    // Setup - add a text input to each footer cell
+    console.log('rdy1');
+    $('#shibutz thead tr')
+        .clone(true)
+        .addClass('filters')
+        .appendTo('#shibutz thead');
+ 
+    var table = $('#shibutz').DataTable({
+        "order": [],
+        //"ordering": false,
+        "lengthMenu": [ [40, 100, -1], [40, 100, "All"] ],
+        orderCellsTop: true,
+        fixedHeader: true,
+        initComplete: function () {
+            console.log('rdy2');
+            var api = this.api();
+ 
+            // For each column
+            api
+                .columns()
+                .eq(0)
+                .each(function (colIdx) {
+                    // Set the header cell to contain the input element
+                    var cell = $('.filters th').eq(
+                        $(api.column(colIdx).header()).index()
+                    );
+                    var title = $(cell).text();
+                    $(cell).html('<input type="text" placeholder="' + title + '" />');
+ 
+                    // On every keypress in this input
+                    $(
+                        'input',
+                        $('.filters th').eq($(api.column(colIdx).header()).index())
+                    )
+                        .off('keyup change')
+                        .on('keyup change', function (e) {
+                            e.stopPropagation();
+ 
+                            // Get the search value
+                            $(this).attr('title', $(this).val());
+                            var regexr = '({search})'; //$(this).parents('th').find('select').val();
+ 
+                            var cursorPosition = this.selectionStart;
+                            // Search the column for that value
+                            api
+                                .column(colIdx)
+                                .search(
+                                    this.value != ''
+                                        ? regexr.replace('{search}', '(((' + this.value + ')))')
+                                        : '',
+                                    this.value != '',
+                                    this.value == ''
+                                )
+                                .draw();
+ 
+                            $(this)
+                                .focus()[0]
+                                .setSelectionRange(cursorPosition, cursorPosition);
+                        });
+                });
+        },
+    });
+    console.log('rdy3');
+};
+
+  $(document).ready(function () {
+      //debugger;
+      //console.log('tat');
+      google.script.run.withFailureHandler(onInitFailure);
+      //console.log('tat3');
+      google.script.run.withSuccessHandler(onInitSuccess).getUserSched(document.getElementById("mode").innerHTML, document.getElementById("hist").innerHTML, document.getElementById("group").innerHTML, document.getElementById("lvl").innerHTML, document.getElementById("all_hours").innerHTML);
+      //console.log('tat4');
+
+      $('.dataTables_length').addClass('bs-select');
+  }
+);  
+</script>
+<script>
+          function tableTag(res,tid) {
+            //console.log('tableTag1 res='+res);
+            res += "<table class='display cell-border' id='"+tid+"' style='text-align:right'>"+
+                           "<thead style='white-space: nowrap'>"+
+                             "<tr>";
+            //console.log('tableTag2 res='+res);
+            return res;
+          }
+
+          function tableTitle(res,title) {
+            return res+"<h5>"+title +"</h5>";
+          }
+
+          function startTable(res,tid) {
+            //console.log('startTable tid='+tid+' res='+res);
+
+              //res=tableTitle(res,"שיבוץ");
+              res=tableTag(res,tid);
+              res+= "<th>תאריך</th>"+
+                   "<th>משעה</th>"+
+                    "<th>עד</th>"+
+                    "<th>מורה</th>"+
+                    "<th>מקצוע</th>"+
+                    "<th>הערה</th>"+
+                   "<th>שכבה</th>"+
+                    "<th>הערה2</th>"+
+                    "<th>תלמידים</th>";
+            res += "</tr>"+
+                    "</thead><tbody>";
+            //console.log('end startTable tid='+tid+' res='+res);
+            return res;
+          }
+
+          function closeTable(res) { 
+            //console.log('closeTabl res='+res);
+            res += "</tbody></table><br>";
+            return res;
+          }
+
+          function createTable(dat,result) {
+            console.log('start createTable');
+            let dataArray=dat.rows;
+              //debugger;
+            if(dataArray && dataArray !== undefined ){
+            //if(dataArray && dataArray !== undefined && dataArray.length != 0){
+              //console.log('dataArray='+dataArray);
+              //let result ="";
+              let i=0;
+              result=startTable(result, 'shibutz');
+              for(; i<dataArray.length; i++) {
+
+                result += "<tr>";
+                for(var j=0; j<dataArray[i].length; j++){
+                  //console.log('j='+j);
+                  result += "<td>"+dataArray[i][j]+"</td>";
+                }
+                result += "</tr>";
+              }
+              result=closeTable(result);
+              //console.log('2inner='+result);
+              showTable(result,dat);
+            }else{
+              //console.log('no dta');
+              var div = document.getElementById('output');
+              //div.empty()
+              showTable(result + "<h6>Data not found</h6>");
+            }
+          }
+          function showTable(result,dat) {
+            var div = document.getElementById('output');
+            div.innerHTML = result;
+            if (!dat){
+              return;
+            }  
+            if (dat.mode=='one'){
+              var table = $('#shibutz').DataTable({
+                "ordering": false,
+                "lengthMenu": [ [50, 100, -1], [50, 100, "All"] ],
+                });
+            }else{
+              initDT2();
+            }  
+            $('#container').css( 'display', 'block' );
+            //table.columns.adjust().draw();
+          }
+        </script>
+        <!--##JAVASCRIPT FUNCTIONS ~ END ---------------------------------------------------- -->
+    </head>
+    <body>
+        <div class="container">
+            <br>
+            <div id="output"></div>
+              </div>
+            </div>
+        </div>
+      <p hidden id="mode"><?= mode ?></p>
+      <p hidden id="hist"><?= hist ?></p>
+      <p hidden id="group"><?= group ?></p>
+      <p hidden id="lvl"><?= lvl ?></p>
+      <p hidden id="all_hours"><?= all_hours ?></p>
+    </body>
+</html>
